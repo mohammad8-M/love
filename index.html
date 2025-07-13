@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="fa">
+  <head>
+    <meta charset="UTF-8" />
+    <title>راز قلبی مرحله‌ای</title>
+    <style>
+      body {
+        font-family: "Tahoma", sans-serif;
+        background: linear-gradient(to bottom, #fff0f5, #ffe4e1);
+        text-align: center;
+        padding: 50px 20px;
+        margin: 0;
+        overflow-x: hidden;
+      }
+      #heart {
+        position: fixed;
+        top: 20px;
+        left: 20px;
+        font-size: 50px;
+        color: #e91e63;
+        user-select: none;
+        cursor: default;
+        z-index: 1000;
+        transition: transform 0.3s ease;
+      }
+      button,
+      input {
+        padding: 10px 20px;
+        font-size: 16px;
+        border-radius: 10px;
+        margin: 10px;
+        border: none;
+      }
+      button {
+        background-color: #ec407a;
+        color: white;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+      }
+      button:hover {
+        background-color: #c2185b;
+      }
+      #countdown {
+        font-size: 22px;
+        color: #ad1457;
+        margin: 20px 0 40px 0;
+      }
+      .stage {
+        display: none;
+        max-width: 600px;
+        margin: auto;
+        background-color: #fce4ec;
+        padding: 25px 30px;
+        border-radius: 15px;
+        font-size: 18px;
+        color: #880e4f;
+        white-space: pre-wrap;
+      }
+      input[type="text"] {
+        width: 80%;
+        font-size: 17px;
+        border: 1px solid #c2185b;
+        border-radius: 8px;
+        padding: 8px 12px;
+        outline: none;
+        color: #4a148c;
+      }
+      #error {
+        color: red;
+        margin-top: 12px;
+        font-weight: bold;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="heart">❤️</div>
+
+    <!-- مرحله 1: تایمر -->
+    <div id="timerStage" class="stage" style="display: block">
+      <h1>🎁 یه راز قلبی بعد از ۶ ماه</h1>
+      <p>صبر کن تا زمانش برسه...</p>
+      <div id="countdown">در حال بارگذاری...</div>
+      <button onclick="activate()">فعالسازی تایمر</button>
+    </div>
+
+    <!-- مرحله 2: سوال بهتر یا بدتر -->
+    <div id="questionStage" class="stage">
+      <p>به نظرت رابطه‌مون تو این ۶ ماه بهتر شده یا بدتر؟</p>
+      <button onclick="answerRelation(true)">بهتر شده ❤️</button>
+      <button onclick="answerRelation(false)">بدتر شده 💔</button>
+    </div>
+
+    <!-- مرحله 3: سوال تیکه کلام -->
+    <div id="phraseStage" class="stage">
+      <p>تیکه‌کلام من چی بود؟</p>
+      <input type="text" id="answer" placeholder="" autocomplete="off" />
+      <br />
+      <button onclick="checkAnswer()">بررسی جواب</button>
+      <div id="error"></div>
+    </div>
+
+    <!-- مرحله 4: پیام نهایی -->
+    <div id="resultStage" class="stage"></div>
+
+    <script>
+      const key = "activationDate6MonthKey";
+      const heart = document.getElementById("heart");
+      let relationBetter = null; // ذخیره جواب سوال رابطه
+
+      function showStage(stageId) {
+        document.querySelectorAll(".stage").forEach((stage) => {
+          stage.style.display = "none";
+        });
+        document.getElementById(stageId).style.display = "block";
+      }
+
+      function activate() {
+        if (!localStorage.getItem(key)) {
+          const now = new Date();
+          localStorage.setItem(key, now.toISOString());
+          alert("تایمر فعال شد! ۶ ماه دیگه برگرد 😉");
+        } else {
+          alert("تایمر قبلاً فعال شده.");
+        }
+        checkTime();
+      }
+
+      function checkTime() {
+        const saved = localStorage.getItem(key);
+        const countdownEl = document.getElementById("countdown");
+        if (!saved) {
+          countdownEl.textContent = "لطفا تایمر را فعال کنید.";
+          return;
+        }
+        const start = new Date(saved);
+        const target = new Date(start);
+        target.setMonth(target.getMonth() + 0);
+
+        const interval = setInterval(() => {
+          const now = new Date();
+          const distance = target - now;
+
+          if (distance <= 0) {
+            clearInterval(interval);
+            countdownEl.textContent = "⏳ زمان تموم شد!";
+            showStage("questionStage");
+          } else {
+            const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((distance / (1000 * 60 * 60)) % 24);
+            const minutes = Math.floor((distance / (1000 * 60)) % 60);
+            const seconds = Math.floor((distance / 1000) % 60);
+            countdownEl.textContent = `مانده: ${days} روز، ${hours} ساعت، ${minutes} دقیقه، ${seconds} ثانیه`;
+          }
+        }, 1000);
+      }
+
+      function answerRelation(better) {
+        relationBetter = better; // ذخیره جواب
+        showStage("phraseStage"); // همیشه مرحله تیکه کلام بیاد
+      }
+
+      function checkAnswer() {
+        const answerInput = document.getElementById("answer");
+        const userAnswer = answerInput.value.trim();
+        const correctAnswer = "قلب منی";
+        const errorEl = document.getElementById("error");
+        errorEl.textContent = "";
+
+        if (userAnswer.toLowerCase() === correctAnswer.toLowerCase()) {
+          let finalText = "";
+          if (relationBetter) {
+            // اگر بهتر بود پیام غمگین
+            finalText = `این اشتباه برای ما مقدسه
+نمیدونم هنوز با من هستی یا نه
+ولی اینو من برای تو فقط درست کردم
+نگهش دار برا خودت
+بدون که خیلی به فکرت بودم
+ولی این نبود جواب من
+کاش بهتر رفتار میکردی نمیدونم شاید خاطرات خوبی رو با هم داشتیم 
+یا شاید بد ولی اینو بدون همین قدر هم پیام میدی کافی بود 
+تو زندگیم ادمیبودم که زیاد سختی کشیدم 
+هر چی که فکر کنی برا همین بود که اینقدر زود میشکستم`;
+          } else {
+            // اگر بدتر بود پیام عاشقانه
+            finalText = `🎉 آفرین!
+تو نه‌تنها یادت بود، بلکه نشون دادی چقدر برات مهمم.
+این ۶ ماه فقط باعث شد بیشتر قدر تو رو بدونم.
+تو همیشه برای من خاص بودی و خواهی بود. ❤️`;
+          }
+          document.getElementById("resultStage").textContent = finalText;
+          showStage("resultStage");
+        } else {
+          errorEl.textContent = "جواب اشتباهه! یکم فکر کن... ❤️";
+        }
+      }
+
+      // انیمیشن قلب در اسکرول
+      let ticking = false;
+      window.addEventListener("scroll", () => {
+        if (!ticking) {
+          window.requestAnimationFrame(() => {
+            heart.style.animation = "bounce 0.6s";
+            setTimeout(() => (heart.style.animation = ""), 600);
+
+            if (navigator.vibrate) {
+              navigator.vibrate(200);
+            }
+
+            ticking = false;
+          });
+          ticking = true;
+        }
+      });
+
+      window.onload = () => {
+        checkTime();
+      };
+    </script>
+  </body>
+</html>
